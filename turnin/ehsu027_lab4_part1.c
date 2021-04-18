@@ -16,29 +16,32 @@ int main(void) {
     /* Insert DDR and PORT initializations */
 	DDRA = 0x00; PORTA = 0x00;
 	DDRB = 0xFF; PORTB = 0x00;
-        enum SM_STATES { SM_SMStart, SM_PB0, SM_Wait, SM_PB1 } SM_STATE;
+        enum SM_STATES { SM_SMStart, SM_PB0, SM_Wait, SM_PB1, SM_Wait2 } SM_STATE;
         void Tick_Toggle() {
                 switch(SM_STATE) {
                         case SM_SMStart:
                                 SM_STATE = SM_PB0;
-                                break;
-                        case SM_PB0:
-                                if (PINA & 0x01) {
-                                        SM_STATE = SM_PB1;
-                                }
-                                else {
-                                        SM_STATE = SM_PB0;
-                                }
                         break;
+                        case SM_PB0:
+                                SM_STATE = SM_Wait;
+                        break;
+			case SM_Wait:
+				if (PINA & 0x01) {
+					SM_STATE = SM_PB1;
+				}
+				else {
+					SM_STATE = SM_Wait;
+				}
+			break;
                         case SM_PB1:
                                 SM_STATE = SM_Wait;
                         break;
-                        case SM_Wait:
+                        case SM_Wait2:
                                 if (PINA & 0x01) {
                                         SM_STATE = SM_PB0;
                                 }
                                 else {
-                                        SM_STATE = SM_Wait;
+                                        SM_STATE = SM_Wait2;
                                 }
                         break;
                         default:

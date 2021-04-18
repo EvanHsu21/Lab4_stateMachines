@@ -38,7 +38,7 @@ int main(void) {
                                         SM_STATE = SM_PB0;
                                 }
                                 else {
-                                        SM_STATE = SM_PB1;
+                                        SM_STATE = SM_Wait;
                                 }
                         break;
                         default:

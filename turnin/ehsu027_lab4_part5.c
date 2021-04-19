@@ -15,41 +15,54 @@
 int main(void) {
     /* Insert DDR and PORT initializations */
 	DDRA = 0x00; PORTA = 0x00;
-	DDRC = 0xFF; PORTC = 0x00;
-enum SM_STATES { SM_SMStart, SM_Lock, SM_Hash, SM_Wait, SM_Y, SM_Unlock } SM_STATE;
+	DDRB = 0xFF; PORTB = 0x00;
+	DDRC = 0x0F; PORTC = 0x00;
+	unsigned char i = 0;
+	char combination[4];
+	combination[0] = 0x04;
+	combination[1] = 0x01;
+	combination[2] = 0x02;
+	combination[3] = 0x01;
+enum SM_STATES { SM_SMStart, SM_Lock, SM_Reset, SM_Continue, SM_Unlock } SM_STATE;
         void Tick_Toggle() {
                 switch(SM_STATE) {
                         case SM_SMStart:
                                 SM_STATE = SM_Lock;		
                                 break;
                         case SM_Lock:
-				if (PINA == 0x04) {
-					SM_STATE = SM_Hash;
+				if (PINA == sequence[i]) {
+					PORTC = i;
+					if (i < 3) {
+						SM_STATE = SM_Continue;
+					}
+					else if (i == 3) {
+						SM_STATE = SM_Unlock;
+					}
 				}
-				else {
-					SM_STATE = SM_Lock;
+				else if (PINA) {
+					SM_State = SM_Reset;
+					i = 0;
 				}
                         break;
-                        case SM_Hash:
+			case SM_Continue:
 				if (PINA == 0x00) {
-                                	SM_STATE = SM_Wait;
-				}
-                        break;
-                        case SM_Wait:
-                                if (PINA == 0x02) {
-					SM_STATE = SM_Y;
-				}
-				else {
+					i++;
 					SM_STATE = SM_Lock;
-				}	
-                        break;
-			case SM_Y:
-				if (PINA == 0x00) {
-					SM_STATE = SM_Unlock;
 				}
 			break;
+			
+			case SM_Reset:
+				if (PINA == 0x00) {
+					SM_STATE = SM_Lock;
+				}
+			break;
+				
 			case SM_Unlock:
 				if (PINA == 0x80) {
+					PORTB = 0x00;
+					SM_STATE = SM_Lock;
+				}
+				else if (PINA == sequence[0]) {
 					SM_STATE = SM_Lock;
 				}
 			break;
@@ -63,17 +76,11 @@ enum SM_STATES { SM_SMStart, SM_Lock, SM_Hash, SM_Wait, SM_Y, SM_Unlock } SM_STA
                         case SM_SMStart:
                         break;
                         case SM_Lock:
-				PORTC = 0x00;
-				PORTB = 0x00;
-                        break;
-			case SM_Hash:
-				PORTC = 0x01;
 			break;
-                        case SM_Wait:
-				PORTC = 0x02;
-                        break;
-                       	case SM_Y:
-				PORTC = 0x03;
+			case SM_Continue:
+			break;
+			case SM_Reset:
+				PORTB = 0x00;
 			break;
 			case SM_Unlock:
 				if (PORTB == 0x00) {
@@ -82,7 +89,6 @@ enum SM_STATES { SM_SMStart, SM_Lock, SM_Hash, SM_Wait, SM_Y, SM_Unlock } SM_STA
 				else if (PORTB == 0x01) {
 					PORTB = 0x00;
 				}
-				PORTC = 0x04;
 			break;
 			
 }
